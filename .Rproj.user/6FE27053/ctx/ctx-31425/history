@@ -1,0 +1,512 @@
+Neg_EntID
+Pos_EntID
+Neg_KEGG <- enrichKEGG(
+Neg_EntID,
+organism = "hsa",
+keyType = "kegg",
+pvalueCutoff = 0.05,
+pAdjustMethod = "BH",
+qvalueCutoff = 0.2,
+minGSSize = 100,
+maxGSSize = 500,
+)
+P4 <- barplot(Neg_KEGG, showCategory=20)
+P4
+Neg_KEGG <- enrichKEGG(
+Neg_EntID,
+organism = "hsa",
+keyType = "kegg",
+pvalueCutoff = 0.05,
+pAdjustMethod = "BH",
+qvalueCutoff = 0.2,
+minGSSize = 1,
+maxGSSize = 500,
+)
+P4 <- barplot(Neg_KEGG, showCategory=20)
+P4
+Neg_KEGG <- enrichKEGG(
+Neg_EntID,
+organism = "hsa",
+keyType = "kegg",
+pvalueCutoff = 0.05,
+pAdjustMethod = "BH",
+qvalueCutoff = 0.3,
+minGSSize = 10,
+maxGSSize = 500,
+)
+P4 <- barplot(Neg_KEGG, showCategory=20)
+P4
+View(Neg_KEGG)
+View(Neg_KEGG@result)
+P1+P2
+dotplot(Pos_GO_BPs)
+## GO BPs
+Pos_GO_BPs <- enrichGO(
+Pos_EntID,
+org.Hs.eg.db,
+keyType = "SYMBOL",
+ont = "BP",
+pvalueCutoff = 0.05,
+pAdjustMethod = "BH",
+universe,
+qvalueCutoff = 0.2,
+minGSSize = 10,
+maxGSSize = 500,
+readable = FALSE,
+pool = FALSE
+)
+P1 <- barplot(Pos_GO_BPs, showCategory=20)
+## GO BPs
+Pos_GO_BPs <- enrichGO(
+Pos_EntID,
+org.Hs.eg.db,
+keyType = "ENTREZID",
+ont = "BP",
+pvalueCutoff = 0.05,
+pAdjustMethod = "BH",
+universe,
+qvalueCutoff = 0.2,
+minGSSize = 10,
+maxGSSize = 500,
+readable = FALSE,
+pool = FALSE
+)
+rm(Neg_GO_BP, Pos_GO_BP, Neg_GO_BPs, Pos_GO_BPs)
+## GO BPs
+Pos_GO_BPs <- enrichGO(
+Pos_EntID,
+org.Hs.eg.db,
+keyType = "ENTREZID",
+ont = "BP",
+pvalueCutoff = 0.05,
+pAdjustMethod = "BH",
+universe,
+qvalueCutoff = 0.2,
+minGSSize = 10,
+maxGSSize = 500,
+readable = FALSE,
+pool = FALSE
+)
+## Clean work space
+rm(list = ls())
+library(MetaIntegrator)
+library(GEOquery)
+library(pROC)
+library(caret)
+library(genefilter)
+library(mltools)
+library(illuminaHumanv3.db)
+library(annotate)
+library(precrec)
+library(patchwork)
+load("./Data/HPyloriData.rda")
+## Load the validation datasets (cell lines)
+load("./Data/HPyloriCellLineData.rda")
+## Load the cancer dataset 1
+load("./Data/CanDataSet1.rda")
+# load Cancer DataSet2 Pheno
+canPheno2 <- read.delim("./Data/EMTAB1440/EMTAB1440Pheno.txt")
+# load Cancer DataSet2 Expr
+canExpr2 <- read.delim("./Data/EMTAB1440/ExpressionNormalized_v2.txt")
+###############
+#######################################################
+## Getting the phenotype data for each data set
+pheno1 <- Dataset1$pheno
+pheno2 <- Dataset2$pheno
+pheno3 <- Dataset3$pheno
+pheno4 <- Dataset4$pheno
+Valpheno1 <- ValDataset1$pheno
+Valpheno2 <- ValDataset2$pheno
+Valpheno3 <- ValDataset3$pheno
+Valpheno4 <- ValDataset4$pheno
+canPheno1 <- CanDataset1$pheno
+################################
+## Getting the expression data for each data set
+## load expr4
+#load("/Users/mohamedomar/Documents/Research/Projects/Prostate/Data/expr4.rda")
+#ProstateData$originalData$GSE46691$expr <- expr4
+expr1 <- Dataset1$expr
+expr2 <- Dataset2$expr
+expr3 <- Dataset3$expr
+expr4 <- Dataset4$expr
+Valexpr1 <- ValDataset1$expr
+Valexpr2 <- ValDataset2$expr
+Valexpr3 <- ValDataset3$expr
+Valexpr4 <- ValDataset4$expr
+canExpr1 <- CanDataset1$expr
+## Checking if the expression data are normalized and log2 transformed
+# boxplot(expr1[,1:15], outline= FALSE)
+# boxplot(expr2[,1:15], outline= FALSE)
+# boxplot(expr3[,1:15], outline = FALSE)
+# boxplot(expr4[,1:15], outline= FALSE)
+#
+# boxplot(Valexpr1[,1:15], outline = FALSE)
+# boxplot(Valexpr2[,1:6], outline = FALSE)
+# boxplot(Valexpr3[,1:6], outline = FALSE)
+# boxplot(Valexpr4[,1:6], outline = FALSE)
+#
+# boxplot(canExpr1[,1:14], outline = FALSE)
+#################################################################
+## Create a list containing training data sets
+AllDataSets <- list(Dataset1, Dataset2, Dataset3, Dataset4)
+names(AllDataSets) <- c(Dataset1$formattedName, Dataset2$formattedName, Dataset3$formattedName, Dataset4$formattedName)
+###################################################################
+## Annotate expression
+## Expr1
+head(rownames(expr1))
+rownames(expr1) <- Dataset1$keys
+expr1 <- expr1[!is.na(rownames(expr1)), ]
+#####################
+## expr2
+head(rownames(expr2))
+rownames(expr2) <- Dataset2$keys
+expr2 <- expr2[!is.na(rownames(expr2)), ]
+dim(expr2)
+#####################
+## expr3
+head(rownames(expr3))
+rownames(expr3) <- Dataset3$keys
+expr3 <- expr3[!is.na(rownames(expr3)), ]
+dim(expr3)
+# #######################
+# expr4
+head(rownames(expr4))
+rownames(expr4) <- Dataset4$keys
+expr4 <- expr4[!is.na(rownames(expr4)), ]
+dim(expr4)
+# #######################
+# Valexpr1
+head(rownames(Valexpr1))
+rownames(Valexpr1) <- ValDataset1$keys
+Valexpr1 <- Valexpr1[!is.na(rownames(Valexpr1)), ]
+dim(Valexpr1)
+# #######################
+# Valexpr2
+head(rownames(Valexpr2))
+rownames(Valexpr2) <- ValDataset2$keys
+Valexpr2 <- Valexpr2[!is.na(rownames(Valexpr2)), ]
+dim(Valexpr2)
+# #######################
+# Valexpr3
+head(rownames(Valexpr3))
+rownames(Valexpr3) <- ValDataset3$keys
+Valexpr3 <- Valexpr3[!is.na(rownames(Valexpr3)), ]
+dim(Valexpr3)
+# #######################
+# Valexpr4
+head(rownames(Valexpr4))
+rownames(Valexpr4) <- ValDataset4$keys
+Valexpr4 <- Valexpr4[!is.na(rownames(Valexpr4)), ]
+dim(Valexpr4)
+# #######################
+# cancerExpr1
+head(rownames(canExpr1))
+rownames(canExpr1) <- CanDataset1$keys
+canExpr1 <- canExpr1[!is.na(rownames(canExpr1)), ]
+dim(canExpr1)
+# #######################
+# cancerExpr2
+head(rownames(canExpr2))
+# annotate canExpr2 (illumina)
+tmp <- canExpr2$Hybridization.REF
+canExpr2$GeneSymbol<- mapIds(illuminaHumanv3.db,
+keys=tmp,
+column="SYMBOL",
+keytype="PROBEID",
+multiVals="first")
+canExpr2 <- canExpr2[!duplicated(canExpr2$GeneSymbol), ]
+canExpr2 <- canExpr2[!is.na(canExpr2$GeneSymbol), ]
+rownames(canExpr2) <- canExpr2$GeneSymbol
+canExpr2$Hybridization.REF <- NULL
+canExpr2$GeneSymbol <- NULL
+dim(canExpr2)
+# Finally modify the sample names to match those in the phenotype
+colnames(canExpr2) <- gsub("X", "", colnames(canExpr2))
+colnames(canExpr2) <- tolower(colnames(canExpr2))
+colnames(canExpr2)
+# Convert to numeric matrix
+COLS <- colnames(canExpr2)
+ROWS <- rownames(canExpr2)
+canExpr2 <- matrix(as.numeric(unlist(canExpr2)),nrow=nrow(canExpr2))
+rownames(canExpr2) <- ROWS
+colnames(canExpr2) <- COLS
+# ############################################################
+####################################################################
+#### Modify the phenotypes
+# Pheno1
+pheno1$DiseaseStatus <- pheno1$`disease state:ch1`
+pheno1$DiseaseStatus[pheno1$DiseaseStatus == "non-infected"] <- "control"
+pheno1$DiseaseStatus[pheno1$DiseaseStatus == "infected"] <- "case"
+pheno1$DiseaseStatus[pheno1$DiseaseStatus == "atrophy"] <- "case"
+pheno1$DiseaseStatus <- factor(pheno1$DiseaseStatus, levels = c("control","case"))
+table(pheno1$DiseaseStatus)
+all(rownames(pheno1) == colnames(expr1))
+#
+Dataset1$pheno <- pheno1
+Dataset1$expr <- expr1
+Dataset1$keys <- rownames(expr1)
+##########
+## Modify pheno2
+pheno2$DiseaseStatus <- pheno2$`gastritis grade:ch1`
+pheno2$DiseaseStatus[pheno2$DiseaseStatus == "normal"] <- "control"
+pheno2$DiseaseStatus[pheno2$DiseaseStatus %in% c("mild", "IM", "severe")] <- "case"
+pheno2$DiseaseStatus <- factor(pheno2$DiseaseStatus, levels = c("control", "case"))
+table(pheno2$DiseaseStatus)
+#
+all(rownames(pheno2) == colnames(expr2))
+## Finally, replace the expression and phenotype data in the dataset with the new modified versions
+Dataset2$expr <- expr2
+Dataset2$pheno <- pheno2
+Dataset2$keys <- rownames(expr2)
+######
+# Modify pheno3
+pheno3$DiseaseStatus <- pheno3$title
+pheno3$DiseaseStatus[1:4] <- "control"
+pheno3$DiseaseStatus[5:length(pheno3$DiseaseStatus)] <- "case"
+pheno3$DiseaseStatus <- factor(pheno3$DiseaseStatus, levels = c("control", "case"))
+table(pheno3$DiseaseStatus)
+all(rownames(pheno3) == colnames(expr3))
+## Finally, replace the expression and phenotype data in the dataset with the new modified versions
+Dataset3$pheno <- pheno3
+Dataset3$expr <- expr3
+Dataset3$keys <- rownames(expr3)
+#######
+## Modify pheno4
+pheno4$DiseaseStatus <- pheno4$title
+pheno4$DiseaseStatus <- gsub("\\,.+", "", pheno4$DiseaseStatus)
+pheno4$DiseaseStatus <- gsub("Gastric biopsy ", "", pheno4$DiseaseStatus)
+pheno4$DiseaseStatus[pheno4$DiseaseStatus == "HP- ER+"] <- "case"
+pheno4$DiseaseStatus[pheno4$DiseaseStatus == "HP+ ER+"] <- "case"
+pheno4$DiseaseStatus[pheno4$DiseaseStatus == "HP+ ER-"] <- "case"
+pheno4$DiseaseStatus[pheno4$DiseaseStatus == "HP- ER-"] <- "control"
+pheno4$DiseaseStatus <- factor(pheno4$DiseaseStatus, levels = c("control", "case"))
+table(pheno4$DiseaseStatus)
+## Modify sample names to match sample names of pheno4
+all(rownames(pheno4) == colnames(expr4))
+## Finally, replace the expression and phenotype data in the dataset with the new modified versions
+Dataset4$expr <- expr4
+Dataset4$pheno <- pheno4
+Dataset4$keys <- rownames(expr4)
+##################
+## Modify valPheno1
+Valpheno1$DiseaseStatus <- Valpheno1$source_name_ch1
+Valpheno1 <- Valpheno1[1:8, ]
+Valpheno1$DiseaseStatus[1:4] <- "case"
+Valpheno1$DiseaseStatus[5:8] <- "control"
+Valpheno1$DiseaseStatus <- factor(Valpheno1$DiseaseStatus, levels = c("control", "case"))
+table(Valpheno1$DiseaseStatus)
+## Modify sample names to match sample names of valpheno1
+Valexpr1 <- Valexpr1[, colnames(Valexpr1) %in% rownames(Valpheno1)]
+all(rownames(Valpheno1) == colnames(Valexpr1))
+## Finally, replace the expression and phenotype data in the dataset with the new modified versions
+ValDataset1$expr <- Valexpr1
+ValDataset1$pheno <- Valpheno1
+ValDataset1$keys <- rownames(Valexpr1)
+##################
+## Modify valPheno2
+Valpheno2$DiseaseStatus <- Valpheno2$`infection:ch1`
+Valpheno2$DiseaseStatus[Valpheno2$DiseaseStatus == "uninfected"] <- "control"
+Valpheno2$DiseaseStatus[Valpheno2$DiseaseStatus == "H. pylori strain 60190"] <- "case"
+Valpheno2$DiseaseStatus <- factor(Valpheno2$DiseaseStatus, levels = c("control", "case"))
+table(Valpheno2$DiseaseStatus)
+## Modify sample names to match sample names of valpheno2
+all(rownames(Valpheno2) == colnames(Valexpr2))
+## Finally, replace the expression and phenotype data in the dataset with the new modified versions
+ValDataset2$expr <- Valexpr2
+ValDataset2$pheno <- Valpheno2
+ValDataset2$keys <- rownames(Valexpr2)
+##################
+## Modify valPheno3
+Valpheno3$DiseaseStatus <- Valpheno3$title
+Valpheno3$DiseaseStatus[1:3] <- "control"
+Valpheno3$DiseaseStatus[4:6] <- "case"
+Valpheno3$DiseaseStatus <- factor(Valpheno3$DiseaseStatus, levels = c("control", "case"))
+table(Valpheno3$DiseaseStatus)
+## Modify sample names to match sample names of valpheno3
+all(rownames(Valpheno3) == colnames(Valexpr3))
+## Finally, replace the expression and phenotype data in the dataset with the new modified versions
+ValDataset3$expr <- Valexpr3
+ValDataset3$pheno <- Valpheno3
+ValDataset3$keys <- rownames(Valexpr3)
+##################
+## Modify valPheno4
+Valpheno4$DiseaseStatus <- Valpheno4$title
+Valpheno4$DiseaseStatus[1:3] <- "control"
+Valpheno4$DiseaseStatus[4:6] <- "case"
+Valpheno4$DiseaseStatus <- factor(Valpheno4$DiseaseStatus, levels = c("control", "case"))
+table(Valpheno4$DiseaseStatus)
+## Modify sample names to match sample names of valpheno3
+all(rownames(Valpheno4) == colnames(Valexpr4))
+## Finally, replace the expression and phenotype data in the dataset with the new modified versions
+ValDataset4$expr <- Valexpr4
+ValDataset4$pheno <- Valpheno4
+ValDataset4$keys <- rownames(Valexpr4)
+##################
+## Modify cancer pheno1
+canPheno1$DiseaseStatus <- canPheno1$`tissue:ch1`
+canPheno1$DiseaseStatus[canPheno1$DiseaseStatus == "normal gastric tissue"] <- "control"
+canPheno1$DiseaseStatus[canPheno1$DiseaseStatus == "gastric tumor"] <- "case"
+canPheno1$DiseaseStatus <- factor(canPheno1$DiseaseStatus, levels = c("control", "case"))
+table(canPheno1$DiseaseStatus)
+## Modify sample names to match sample names of valpheno3
+all(rownames(canPheno1) == colnames(canExpr1))
+## Finally, replace the expression and phenotype data in the dataset with the new modified versions
+CanDataset1$expr <- canExpr1
+CanDataset1$pheno <- canPheno1
+CanDataset1$keys <- rownames(canExpr1)
+##################
+## Modify cancer pheno2
+rownames(canPheno2) <- canPheno2$Source.Name
+canPheno2$DiseaseStatus <- canPheno2$Factor.Value.disease.
+canPheno2$DiseaseStatus[canPheno2$DiseaseStatus == "normal"] <- "control"
+canPheno2$DiseaseStatus[canPheno2$DiseaseStatus == "gastric adenocarcinoma"] <- "case"
+canPheno2$DiseaseStatus <- factor(canPheno2$DiseaseStatus, levels = c("control", "case"))
+table(canPheno2$DiseaseStatus)
+## Modify sample names to match sample names of valpheno3
+all(rownames(canPheno2) == colnames(canExpr2))
+## Finally, replace the expression and phenotype data in the dataset with the new modified versions
+CanDataset2 <- list()
+CanDataset2$expr <- matrix(as.numeric(unlist(canExpr2)),nrow=nrow(canExpr2))
+CanDataset2$pheno <- canPheno2
+CanDataset2$keys <- rownames(canExpr2)
+CanDataset2$formattedName <- "EMTAB1440"
+#########################################################################
+############################################################################
+## Label samples (All samples need to be assigned labels in the $class vector, 1 for ‘disease’ or 0 for ‘control’)
+Dataset1 <- classFunction(Dataset1, column = "DiseaseStatus", diseaseTerms = c("case"))
+Dataset2 <- classFunction(Dataset2, column = "DiseaseStatus", diseaseTerms = c("case"))
+Dataset3 <- classFunction(Dataset3, column = "DiseaseStatus", diseaseTerms = c("case"))
+Dataset4 <- classFunction(Dataset4, column = "DiseaseStatus", diseaseTerms = c("case"))
+ValDataset1 <- classFunction(ValDataset1, column = "DiseaseStatus", diseaseTerms = c("case"))
+ValDataset2 <- classFunction(ValDataset2, column = "DiseaseStatus", diseaseTerms = c("case"))
+ValDataset3 <- classFunction(ValDataset3, column = "DiseaseStatus", diseaseTerms = c("case"))
+ValDataset4 <- classFunction(ValDataset4, column = "DiseaseStatus", diseaseTerms = c("case"))
+CanDataset1 <- classFunction(CanDataset1, column = "DiseaseStatus", diseaseTerms = c("case"))
+CanDataset2 <- classFunction(CanDataset2, column = "DiseaseStatus", diseaseTerms = c("case"))
+############################################################################
+############################################################################
+#########################################################################
+## The metaanalysis
+## Creating the meta object
+AllDataSets <- list(Dataset1, Dataset2, Dataset3, Dataset4)
+names(AllDataSets) <- c(Dataset1$formattedName, Dataset2$formattedName, Dataset3$formattedName, Dataset4$formattedName)
+HPylori_Meta <- list()
+HPylori_Meta$originalData <- AllDataSets
+## Check the meta object before the metaanalysis
+checkDataObject(HPylori_Meta, "Meta", "Pre-Analysis") ## If true, Proceed to the meta analysis
+#HPylori_Meta <- geneSymbolCorrection(HPylori_Meta)
+## Run the meta analysis
+HPylori_metaanalysis <- runMetaAnalysis(HPylori_Meta, runLeaveOneOutAnalysis = F, maxCores = 3)
+# effectSize = 0/ FDR = 0.1/ Nstudies = 3
+## Filter out significant genes from the metaanalysis results (this will be the gene signature that separates Metas from No_Mets)
+HPylori_metaanalysis <- filterGenes(HPylori_metaanalysis, isLeaveOneOut = F, effectSizeThresh = 0, FDRThresh = 0.05, numberStudiesThresh = 4)
+## Assigning a name to the filter
+filter <- HPylori_metaanalysis$filterResults[[1]]
+filter
+PositiveGenes <- filter$posGeneNames
+NegativeGenes <- filter$negGeneNames
+#save(PositiveGenes, NegativeGenes, file = "./Objs/NewSigGenes_Pre.rda")
+## Summarize filter results
+filter_summary <- summarizeFilterResults(metaObject = HPylori_metaanalysis, getMostRecentFilter(HPylori_metaanalysis))
+#save(New_filter, file = "./Objs/NewFilter.rda")
+load("./Objs/NewFilter.rda")
+HPylori_metaanalysis$filterResults$FDR0.05_es0_nStudies4_looaFALSE_hetero0$posGeneNames <- New_filter$posGeneNames
+HPylori_metaanalysis$filterResults$FDR0.05_es0_nStudies4_looaFALSE_hetero0$negGeneNames <- New_filter$negGeneNames
+New_filter <- HPylori_metaanalysis$filterResults[[1]]
+New_filter_summary <- summarizeFilterResults(metaObject = HPylori_metaanalysis, getMostRecentFilter(HPylori_metaanalysis))
+PositiveGenes <- New_filter$posGeneNames
+PositiveGenes
+NegativeGenes <- New_filter$negGeneNames
+NegativeGenes
+###############################################################################
+## Gene set enrichment analysis
+library(enrichR)
+library(clusterProfiler)
+# annotate canExpr2 (illumina)
+Pos_EntID<- mapIds(org.Hs.eg.db,
+keys=PositiveGenes,
+column="ENTREZID",
+keytype="SYMBOL",
+multiVals="first")
+Neg_EntID<- mapIds(org.Hs.eg.db,
+keys=NegativeGenes,
+column="ENTREZID",
+keytype="SYMBOL",
+multiVals="first")
+## GO BPs
+Pos_GO_BPs <- enrichGO(
+Pos_EntID,
+org.Hs.eg.db,
+keyType = "ENTREZID",
+ont = "BP",
+pvalueCutoff = 0.05,
+pAdjustMethod = "BH",
+universe,
+qvalueCutoff = 0.2,
+minGSSize = 10,
+maxGSSize = 500,
+readable = FALSE,
+pool = FALSE
+)
+## GO BPs
+Pos_GO_BPs <- enrichGO(
+Pos_EntID,
+org.Hs.eg.db,
+keyType = "ENTREZID",
+ont = "BP",
+pvalueCutoff = 0.05,
+pAdjustMethod = "BH",
+universe,
+qvalueCutoff = 0.2,
+minGSSize = 10,
+maxGSSize = 500,
+readable = FALSE,
+pool = FALSE
+)
+P1 <- barplot(Pos_GO_BPs, showCategory=20)
+P1
+graphics.off()
+P1 <- barplot(Pos_GO_BPs, showCategory=20)
+P1
+graphics.off()
+Neg_GO_BPs <- enrichGO(
+Neg_EntID,
+org.Hs.eg.db,
+keyType = "ENTREZID",
+ont = "BP",
+pvalueCutoff = 0.05,
+pAdjustMethod = "BH",
+qvalueCutoff = 0.2,
+minGSSize = 10,
+maxGSSize = 500,
+readable = FALSE,
+pool = FALSE
+)
+P2 <- barplot(Neg_GO_BPs, showCategory=20)
+P2
+View(Neg_GO_BPs@result)
+## KEGG
+Pos_KEGG <- enrichKEGG(
+Pos_EntID,
+organism = "hsa",
+keyType = "kegg",
+pvalueCutoff = 0.05,
+pAdjustMethod = "BH",
+qvalueCutoff = 0.2,
+minGSSize = 10,
+maxGSSize = 500,
+)
+P3 <- barplot(Pos_KEGG, showCategory=20)
+Neg_KEGG <- enrichKEGG(
+Neg_EntID,
+organism = "hsa",
+keyType = "kegg",
+pvalueCutoff = 0.05,
+pAdjustMethod = "BH",
+qvalueCutoff = 0.2,
+minGSSize = 10,
+maxGSSize = 500,
+)
+P4 <- barplot(Neg_KEGG, showCategory=20)
+P1/P2
+rm(list = ls())
