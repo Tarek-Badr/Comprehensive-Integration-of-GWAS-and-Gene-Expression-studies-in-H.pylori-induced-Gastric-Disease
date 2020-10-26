@@ -927,11 +927,35 @@ write.table(NegativeGenes, file = "./DownRegulatedGenes.txt")
 #save(New_SignatureGenes, file = "./Objs/NewSigGenes.rda")
 
 ## Create a summary ROC curve (Training data sets)
+My_Theme = theme(
+  axis.title.x = element_text(size = 12),
+  axis.text.x = element_text(size = 12),
+  axis.title.y = element_text(size = 12),
+  axis.text.y = element_text(size = 12),
+  plot.title = element_text(size=18)
+)
 set.seed(333)
-png(filename = "./Figs/Pooled_ROC_TrainingDatasets.png", width = 2000, height = 2000, res = 300)
-pooledROCPlot(metaObject = HPylori_metaanalysis, filterObject = New_filter)
-dev.off()
+PooledROC <- pooledROCPlot(metaObject = HPylori_metaanalysis, filterObject = New_filter)
+ViolinTrain1 <- violinPlot(filterObject = New_filter, datasetObject = Dataset1, labelColumn = "DiseaseStatus") + My_Theme
+ViolinTrain2 <- violinPlot(filterObject = New_filter, datasetObject = Dataset2, labelColumn = "DiseaseStatus") + My_Theme
+ViolinTrain3 <- violinPlot(filterObject = New_filter, datasetObject = Dataset3, labelColumn = "DiseaseStatus") + My_Theme
+ViolinTrain4 <- violinPlot(filterObject = New_filter, datasetObject = Dataset4, labelColumn = "DiseaseStatus") + My_Theme
 
+## Plot the discovery 
+
+tiff(filename = "./Figs/Discovery_Original_Sig.tiff", width = 1500, height = 1000)
+PooledROC +    ((ViolinTrain1  + plot_layout(tag_level = "new") & theme(plot.tag = element_text(size = 12))) | 
+                  (ViolinTrain2  + plot_layout(tag_level = "new") & theme(plot.tag = element_text(size = 12))) | 
+                  (ViolinTrain3  + plot_layout(tag_level = "new") & theme(plot.tag = element_text(size = 12))) | 
+                  (ViolinTrain4  + plot_layout(tag_level = "new") & theme(plot.tag = element_text(size = 12))) 
+) +
+  plot_layout(widths = c(0.4, 1)) + 
+  plot_annotation(
+    title = 'Performance of the original signature in the discovery datasets',
+    tag_levels = c('A', '1'),
+    theme = theme(plot.title = element_text(size = 17, face = "bold"))
+  )
+dev.off()
 
 
 #### ## Load the new genes from Mohamed
