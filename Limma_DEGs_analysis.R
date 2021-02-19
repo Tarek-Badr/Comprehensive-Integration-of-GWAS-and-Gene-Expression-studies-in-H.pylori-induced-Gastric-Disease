@@ -1,3 +1,4 @@
+
 library(KEGG.db)
 library(Rgraphviz)
 library(png)
@@ -31,10 +32,10 @@ sml <- c()
 for (i in 1:nchar(gsmid)) { sml[i] <- substr(gsmid,i,i) }
 
 exp_data <- exprs(gsedata)
-qx <- as.numeric(quantile(exp_data, c(0., 0.25, 0.5, 0.75, 0.99, 1.0), na.rm=T))
-LogC <- (qx[5] > 100) ||
-  (qx[6]-qx[1] > 50 && qx[2] > 0) ||
-  (qx[2] > 0 && qx[2] < 1 && qx[4] > 1 && qx[4] < 2)
+q_exp_data <- as.numeric(quantile(exp_data, c(0., 0.25, 0.5, 0.75, 0.99, 1.0), na.rm=T))
+LogC <- (q_exp_data[5] > 100) ||
+  (q_exp_data[6]-q_exp_data[1] > 50 && q_exp_data[2] > 0) ||
+  (q_exp_data[2] > 0 && q_exp_data[2] < 1 && q_exp_data[4] > 1 && q_exp_data[4] < 2)
 if (LogC) { exp_data[which(exp_data <= 0)] <- NaN
 exprs(gsedata) <- log2(exp_data) }
 sml <- paste("G", sml, sep="")   
@@ -51,13 +52,13 @@ datafit <- lmFit(gsedata, design)
 
 cont <- makeContrasts(G1-G0, levels=design)
 
-datafit2 <- contrasts.fit(datafit, cont)
+datafit_cont <- contrasts.fit(datafit, cont)
 
-datafit2 <- eBayes(datafit2, 0.01)
+datafit_cont <- eBayes(datafit_cont, 0.01)
 
-DEGs <- topTable(datafit2, adjust="fdr")
+DEGs_GSE70394 <- topTable(datafit_cont, adjust="fdr")
 
-DEGs <- subset(DEGs, select=c("ID","adj.P.Val","P.Value","t","B","logFC","Gene.symbol","Gene.title"))
+DEGs_GSE70394 <- subset(DEGs_GSE70394, select=c("ID","adj.P.Val","P.Value","t","B","logFC","Gene.symbol","Gene.title"))
 
-write.table(DEGs, file=stdout(), row.names=F, sep="\t")
-write.csv(as.data.frame(DEGs), file="GSE70394_d´DEGs.csv")
+write.table(DEGs_GSE70394, file=stdout(), row.names=F, sep="\t")
+write.csv(as.data.frame(DEGs_GSE70394), file="GSE70394_DEGs_F.csv")
