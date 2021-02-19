@@ -1,4 +1,6 @@
 
+rm(list = ls())
+
 library(KEGG.db)
 library(Rgraphviz)
 library(png)
@@ -19,6 +21,11 @@ library(limma)
 setwd("C:/Users/ngs-adm/Desktop/")
 
 data=NULL;eset=NULL;data.exprs=NULL;
+
+HPyloriData <- getGEOData(c("GSE27411", "GSE60427", "GSE60662", "GSE5081"))
+CellLinesData <- getGEOData(c("GSE39919", "GSE70394", "GSE74577", "GSE74492"))
+
+#####an Example for a Dataset analysis with Limma
 
 gset <- getGEO("GSE70394", GSEMatrix =TRUE, AnnotGPL=TRUE)
 if (length(gset) > 1) det <- grep("GPL6255", attr(gset, "names")) else det <- 1
