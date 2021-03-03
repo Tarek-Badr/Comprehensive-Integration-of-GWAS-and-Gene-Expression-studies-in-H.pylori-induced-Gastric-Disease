@@ -1,15 +1,5 @@
 setwd("C:/Users/ngs-adm/Desktop")
 
-DEG_Entriz
-
-FDR001_UP = read.delim("000-FDR001_Up_EntrezID.txt",sep='\t',header = T)
-FDR001_dn = read.delim("000-FDR001_Dn_EntrezID.txt",sep='\t',header = T)
-
-DEG_Entriz = read.delim("DEG_Entriz.txt",sep='\t',header = T)
-cls <- c(Upregulated="character", Downregulated="character")
-DEG_Ent = read.delim("DEG_Entriz.txt",colClasses = cls, stringsAsFactors=FALSE, sep='\t',header = T)
-DEG_Ent_t = t(DEG_Ent)
-
 if (!requireNamespace("BiocManager", quietly = TRUE))
   install.packages("BiocManager")
 
@@ -32,6 +22,16 @@ library(org.Hs.eg.db)
 keytypes(org.Hs.eg.db)
 library(org.Mm.eg.db)
 keytypes(org.Mm.eg.db)
+
+################################################################################################################
+
+FDR001_UP = read.delim("000-FDR001_Up_EntrezID.txt",sep='\t',header = T)
+FDR001_dn = read.delim("000-FDR001_Dn_EntrezID.txt",sep='\t',header = T)
+
+DEG_Entriz = read.delim("DEG_Entriz.txt",sep='\t',header = T)
+cls <- c(Upregulated="character", Downregulated="character")
+DEG_Ent = read.delim("DEG_Entriz.txt",colClasses = cls, stringsAsFactors=FALSE, sep='\t',header = T)
+DEG_Ent_t = t(DEG_Ent)
 
 data(geneList, package="DOSE")
 gene <- names(geneList)[abs(geneList) > 2]
@@ -88,7 +88,7 @@ head(as.data.frame(xx_DO))
 dotplot(xx_ep) #GO Enrichment Analysis
 dotplot(xx) #KEGG Enrichment Analysis
 
+cnetplot(xx)
+
 write.csv(as.data.frame(xx), file=xxxxx_KEGG_pathway.csv")
 
-
-cnetplot(xx)
